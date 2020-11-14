@@ -161,7 +161,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         if currentDepth is self.depth * gameState.getNumAgents() or gameState.isLose() or gameState.isWin():
             return self.evaluationFunction(gameState)
         # Pacman time
-        if agentIndex is 0:
+        if agentIndex == 0:
             return self.max_value(gameState, currentDepth, agentIndex)[1]
         else:
             return self.min_value(gameState, currentDepth, agentIndex)[1]
@@ -169,7 +169,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     # Best Pacman case
     def max_value(self, gameState, currentDepth, agentIndex):
         # With float -infinite we can get a better value for sure
-        val = ("max", -float("inf"))
+        val = ("this affects", -float("inf"))
         for action in gameState.getLegalActions(agentIndex):
             # Recursive call for all actions, we get max
             # Max/min function with lambda to get max value and not max action name
@@ -180,7 +180,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     # Best ghost case
     def min_value(self, gameState, currentDepth, agentIndex):
         # With float -infinite we can get a better value for sure
-        val = ("min", float("inf"))
+        val = ("nothing", float("inf"))
         for action in gameState.getLegalActions(agentIndex):
             # Recursive call for all actions, we get min
             val = min(val, (action, self.minimax(gameState.generateSuccessor(agentIndex, action),
@@ -199,7 +199,46 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.maxval(gameState, 0, 0, -float("inf"), float("inf"))[0]
+
+    # Same as minmax, we add pruning
+    def alphabeta(self, gameState, curr_depth, agentIndex, alpha, beta):
+        if curr_depth is self.depth * gameState.getNumAgents() or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        if agentIndex == 0:
+            return self.maxval(gameState, curr_depth, agentIndex, alpha, beta)[1]
+        else:
+            return self.minval(gameState, curr_depth, agentIndex, alpha, beta)[1]
+
+    def maxval(self, gameState, curr_depth, agentIndex, alpha, beta):
+        val = ("this affects", -float("inf"))
+        for action in gameState.getLegalActions(agentIndex):
+            test = gameState.generateSuccessor(agentIndex, action)
+            val = max(val, (action, self.alphabeta(gameState.generateSuccessor(agentIndex, action), curr_depth + 1,
+                                                   (curr_depth + 1) % gameState.getNumAgents(), alpha, beta)), key=lambda x: x[1])
+
+            # Pruning
+            if val[1] > beta:
+                return val
+            else:
+                alpha = max(alpha, val[1])
+
+        return val
+
+    def minval(self, gameState, curr_depth, agentIndex, alpha, beta):
+        val = ("nothing", float("inf"))
+        for action in gameState.getLegalActions(agentIndex):
+            val = min(val, (action, self.alphabeta(gameState.generateSuccessor(agentIndex, action), curr_depth + 1,
+                                                   (curr_depth + 1) % gameState.getNumAgents(), alpha, beta)), key=lambda x: x[1])
+
+            # Pruning
+            if val[1] < alpha:
+                return val
+            else:
+                beta = min(beta, val[1])
+
+        return val
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
